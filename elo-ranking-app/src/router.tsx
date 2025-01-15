@@ -1,8 +1,9 @@
-import { createBrowserRouter } from 'react-router-dom';
-import { MainLayout } from './components/layout/MainLayout';
-import { HomePage } from './pages/Home';
-import { ListsPage } from './pages/Lists';
-import { AuthPage } from './pages/Auth';
+// src/router.tsx
+import { createBrowserRouter } from 'react-router-dom'
+import { MainLayout } from './components/layout/MainLayout'
+import { HomePage } from './pages/Home'
+import { ListsPage } from './pages/Lists'
+import { AuthPage } from './pages/Auth'
 
 export const router = createBrowserRouter([
   {
@@ -23,4 +24,4 @@ export const router = createBrowserRouter([
       },
     ],
   },
-]);
+])

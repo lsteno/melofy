@@ -1,5 +1,5 @@
-import { QueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+// src/services/api.ts
+import { QueryClient } from '@tanstack/react-query'
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -8,11 +8,4 @@ export const queryClient = new QueryClient({
       retry: 1,
     },
   },
-});
-
-export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+})
