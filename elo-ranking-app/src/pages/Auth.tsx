@@ -8,6 +8,7 @@ export const AuthPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
+  const [isError, setIsError] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
 
   const handleLogin = async () => {
@@ -18,9 +19,10 @@ export const AuthPage = () => {
 
     if (error) {
       setMessage(`Error: ${error.message}`);
+      setIsError(true);
     } else {
       setMessage('Logged in successfully!');
-
+      setIsError(false);
     }
   };
 
@@ -36,8 +38,10 @@ export const AuthPage = () => {
       } else {
         setMessage(`Error: ${error.message}`);
       }
+      setIsError(true);
     } else {
       setMessage('Signup successful! Please check your email.');
+      setIsError(false);
       console.log(data); // Handle sign-up response
     }
   };
@@ -94,8 +98,19 @@ export const AuthPage = () => {
           )}
         </div>
 
+        <div className="mt-4 text-center">
+          <button
+            onClick={() => setIsSignUp(!isSignUp)}
+            className="text-sm text-blue-500 hover:underline"
+          >
+            {isSignUp ? 'Already have an account? Log In' : "Don't have an account? Sign Up"}
+          </button>
+        </div>
+
         {message && (
-          <p className="mt-4 text-center text-sm font-medium text-red-500">{message}</p>
+          <p className={`mt-4 text-center text-sm font-medium ${isError ? 'text-red-500' : 'text-green-500'}`}>
+            {message}
+          </p>
         )}
       </div>
     </div>
