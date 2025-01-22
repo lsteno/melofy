@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -30,17 +30,14 @@ const Card: React.FC<CardProps> = ({ position, rotation, imageUrl }) => {
 
   return (
     <group position={position} rotation={rotation}>
-      {/* Card base */}
       <mesh>
         <boxGeometry args={[2, 3, 0.1]} />
         <meshStandardMaterial
-          color={isLoading ? '#cccccc' : '#ffffff'}
+          color={isLoading ? '#ffffff' : '#ffffff'}
           roughness={0.5}
           metalness={0.1}
         />
       </mesh>
-
-      {/* Card front with image */}
       {texture && (
         <mesh position={[0, 0, 0.06]}>
           <planeGeometry args={[1.8, 2.8]} />
@@ -51,14 +48,8 @@ const Card: React.FC<CardProps> = ({ position, rotation, imageUrl }) => {
   );
 };
 
-const RotatingCards: React.FC = () => {
+const RotatingCards: React.FC<{ velocity: number }> = ({ velocity }) => {
   const [rotation, setRotation] = useState<number>(0);
-
-  useFrame((state) => {
-    // Control the rotation speed
-    setRotation(state.clock.getElapsedTime() * 0.5);
-  });
-
   const images = [
     'src/static/images/godfather.jpg',
     'src/static/images/lotr.jpg',
@@ -66,32 +57,20 @@ const RotatingCards: React.FC = () => {
     'src/static/images/spiritedaway.jpg',
   ];
 
-  // Radius of our cylinder
-  const radius = 5;
+  const radius = 3;
   const angleStep = (2 * Math.PI) / images.length;
+
+  useFrame(() => {
+    setRotation((prev) => prev + velocity);
+  });
 
   return (
     <>
       {images.map((imageUrl, index) => {
-        // Calculate the current angle for this card
         const angle = index * angleStep + rotation;
-
-        // Calculate position on the cylinder surface
-        // As the cylinder rolls forward (towards -z):
-        // - y position follows a circle in the y-z plane
-        // - z position follows the same circle
         const y = radius * Math.sin(angle);
         const z = radius * Math.cos(angle);
-
-        // The key to the rolling cylinder effect:
-        // - We rotate around the X axis only
-        // - The rotation angle matches the position angle
-        // This makes each card maintain its orientation relative to the cylinder surface
-        const cardRotation: [number, number, number] = [
-          -angle, // Rotate around X axis to match cylinder rotation
-          0, // No rotation around Y axis
-          0, // No rotation around Z axis
-        ];
+        const cardRotation: [number, number, number] = [-angle, 0, 0];
 
         return (
           <Card
@@ -107,17 +86,62 @@ const RotatingCards: React.FC = () => {
 };
 
 export const CardSpinner: React.FC = () => {
+  const [velocity, setVelocity] = useState<number>(0);
+  const isDragging = useRef(false);
+  const startMouseX = useRef(0);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    isDragging.current = true;
+    startMouseX.current = e.clientX;
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isDragging.current) {
+      const delta = e.clientX - startMouseX.current;
+      setVelocity(delta * 0.009);
+      startMouseX.current = e.clientX;
+    }
+  };
+
+  const handleMouseUp = () => {
+    isDragging.current = false;
+  };
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (!isDragging.current) {
+      const friction = 0.1; // Adjust this for slower/faster deceleration
+      interval = setInterval(() => {
+        setVelocity((v) => {
+          const newVelocity = v * friction;
+          if (Math.abs(newVelocity) < 0.1) {
+            clearInterval(interval);
+            return 0;
+          }
+          return newVelocity;
+        });
+      }, 16); // 60 FPS
+    }
+    return () => clearInterval(interval);
+  }, [velocity]);
+
   return (
-    <div style={{ width: '100%', height: '100vh', background: '#111827' }}>
+    <div
+      style={{ width: '100%', height: '100vh' }}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={() => (isDragging.current = false)}
+    >
       <Canvas
         camera={{
-          position: [0, 0, 8], // Position camera to the side to see the rolling motion
+          position: [0, 0, 8],
           fov: 75,
         }}
       >
         <ambientLight intensity={0.5} />
         <pointLight position={[10, 10, 10]} intensity={1} />
-        <RotatingCards />
+        <RotatingCards velocity={velocity} />
       </Canvas>
     </div>
   );
