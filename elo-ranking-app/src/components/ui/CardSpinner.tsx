@@ -1,16 +1,25 @@
 'use client';
 
 import { useRef, useState, useEffect } from 'react';
-import { Canvas, useFrame, useLoader } from '@react-three/fiber';
-import { TextureLoader } from 'three';
-import { Plane } from '@react-three/drei';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { Text } from '@react-three/drei';
 
-const Card = ({ position, rotation, texture }) => {
+const Card = ({ position, rotation, text }) => {
   return (
     <group position={position} rotation={rotation}>
-      <Plane args={[3, 2]}>
-        <meshStandardMaterial map={texture} />
-      </Plane>
+      <mesh>
+        <boxGeometry args={[2, 3, 0.1]} />
+        <meshStandardMaterial color="#ffffff" />
+      </mesh>
+      <Text
+        position={[0, 0, 0.06]}
+        fontSize={0.2}
+        color="#000000"
+        anchorX="center"
+        anchorY="middle"
+      >
+        {text}
+      </Text>
     </group>
   );
 };
@@ -22,30 +31,28 @@ const RotatingCards = () => {
     setRotation((prev) => prev + delta);
   });
 
-  const images = [
-    '../static/images/godfather.jpg',
-    '../static/images/lotr.jpg',
-    '../static/images/pulpfiction.jpg',
-    '../static/images/spiritedaway.jpg',
+  const cards = [
+    'Create Lists',
+    'Rank Items',
+    'Share Results',
+    'Discover Trends',
   ];
 
-  const textures = useLoader(TextureLoader, images);
-
   const radius = 5;
-  const angleStep = (2 * Math.PI) / images.length;
+  const angleStep = (2 * Math.PI) / cards.length;
 
   return (
     <>
-      {textures.map((texture, index) => {
+      {cards.map((text, index) => {
         const angle = index * angleStep + rotation;
-        const x = radius * Math.sin(angle);
+        const y = radius * Math.sin(angle);
         const z = radius * Math.cos(angle);
         return (
           <Card
             key={index}
-            position={[x, 0, z]}
-            rotation={[0, angle, 0]}
-            texture={texture}
+            position={[0, y, z]}
+            rotation={[angle, 0, 0]}
+            text={text}
           />
         );
       })}
