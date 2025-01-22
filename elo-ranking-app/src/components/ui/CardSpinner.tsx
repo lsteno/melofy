@@ -88,7 +88,7 @@ const RotatingCards: React.FC = () => {
         // - The rotation angle matches the position angle
         // This makes each card maintain its orientation relative to the cylinder surface
         const cardRotation: [number, number, number] = [
-          angle, // Rotate around X axis to match cylinder rotation
+          -angle, // Rotate around X axis to match cylinder rotation
           0, // No rotation around Y axis
           0, // No rotation around Z axis
         ];
