@@ -2,14 +2,26 @@ import { useState, useEffect, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
+// Define our component props interfaces
+interface CardSpinnerProps {
+  imageUrls: string[];
+}
+
 interface CardProps {
   position: [number, number, number];
   rotation: [number, number, number];
   imageUrl: string;
   angle: number;
+  velocity: number; // Add velocity prop to control curvature
 }
 
-const Card: React.FC<CardProps> = ({ position, rotation, imageUrl, angle }) => {
+const Card: React.FC<CardProps> = ({
+  position,
+  rotation,
+  imageUrl,
+  angle,
+  velocity,
+}) => {
   const [texture, setTexture] = useState<THREE.Texture | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const meshRef = useRef<THREE.Mesh>(null);
@@ -32,15 +44,21 @@ const Card: React.FC<CardProps> = ({ position, rotation, imageUrl, angle }) => {
 
   if (!texture || isLoading) return null;
 
-  // Create a curved geometry for the card
-  const segments = 32; // Controls the smoothness of the curve
-  const radius = 3; // Match the rotation radius
+  // Calculate curvature factor with a minimum of 0.5 (50%)
+  // Scale the remaining 50% based on velocity
+  const minCurvature = 1;
+  const dynamicCurvature =
+    Math.min(Math.abs(velocity) * 2, 1) * (1 - minCurvature);
+  const curvatureFactor = minCurvature + dynamicCurvature;
+
+  const segments = 32;
+  const radius = 3;
   const cardWidth = 1.5;
   const cardHeight = 2;
-  // Adjust arc length for vertical curvature
-  const arcLength = cardHeight / radius;
+  // Scale arc length by curvature factor
+  const arcLength = (cardHeight / radius) * curvatureFactor;
 
-  // Generate vertices for curved surface
+  // Generate vertices for dynamically curved surface
   const geometry = new THREE.BufferGeometry();
   const vertices = [];
   const uvs = [];
@@ -48,22 +66,23 @@ const Card: React.FC<CardProps> = ({ position, rotation, imageUrl, angle }) => {
 
   for (let i = 0; i <= segments; i++) {
     for (let j = 0; j <= segments; j++) {
-      // Calculate position on curved surface
       const u = i / segments;
       const v = j / segments;
-      // Adjust curve calculation for vertical bending
       const theta = arcLength * (v - 0.5);
 
-      // Swap x and y coordinates to curve vertically instead of horizontally
+      // Interpolate between flat and curved positions, maintaining minimum curvature
       const x = cardWidth * (u - 0.5);
-      const y = radius * Math.sin(theta);
-      const z = -radius * (1 - Math.cos(theta));
+      const flatY = cardHeight * (v - 0.5);
+      const curvedY = radius * Math.sin(theta);
+      const y = flatY * (1 - curvatureFactor) + curvedY * curvatureFactor;
+
+      const flatZ = 0;
+      const curvedZ = -radius * (1 - Math.cos(theta));
+      const z = flatZ * (1 - curvatureFactor) + curvedZ * curvatureFactor;
 
       vertices.push(x, y, z);
-      // Keep UVs mapped normally for correct texture display
       uvs.push(u, v);
 
-      // Generate triangle indices
       if (i < segments && j < segments) {
         const current = i * (segments + 1) + j;
         const next = current + (segments + 1);
@@ -92,23 +111,17 @@ const Card: React.FC<CardProps> = ({ position, rotation, imageUrl, angle }) => {
 };
 
 const RotatingCards: React.FC<{
+  imageUrls: string[];
   velocity: number;
   isDragging: boolean;
   onSnapComplete: () => void;
-}> = ({ velocity, isDragging, onSnapComplete }) => {
+}> = ({ imageUrls, velocity, isDragging, onSnapComplete }) => {
   const groupRef = useRef<THREE.Group>(null);
   const [rotation, setRotation] = useState(0);
   const lastRotation = useRef(rotation);
 
-  const images = [
-    'src/static/images/godfather.jpg',
-    'src/static/images/lotr.jpg',
-    'src/static/images/pulpfiction.jpg',
-    'src/static/images/spiritedaway.jpg',
-  ];
-
   const radius = 3;
-  const angleStep = (2 * Math.PI) / images.length;
+  const angleStep = (2 * Math.PI) / imageUrls.length;
 
   useFrame(() => {
     if (!isDragging && Math.abs(velocity) < 0.001) {
@@ -132,7 +145,7 @@ const RotatingCards: React.FC<{
 
   return (
     <group ref={groupRef}>
-      {images.map((imageUrl, index) => {
+      {imageUrls.map((imageUrl, index) => {
         const angle = index * angleStep + rotation;
         const y = radius * Math.sin(angle);
         const z = radius * Math.cos(angle);
@@ -145,6 +158,7 @@ const RotatingCards: React.FC<{
             rotation={cardRotation}
             imageUrl={imageUrl}
             angle={angle}
+            velocity={velocity} // Pass velocity to control card curvature
           />
         );
       })}
@@ -152,20 +166,20 @@ const RotatingCards: React.FC<{
   );
 };
 
-export const CardSpinner: React.FC = () => {
+export const CardSpinner: React.FC<CardSpinnerProps> = ({ imageUrls }) => {
   const [velocity, setVelocity] = useState(0);
   const [isSnapping, setIsSnapping] = useState(false);
   const isDragging = useRef(false);
-  const startMouseX = useRef(0);
-  const lastMouseX = useRef(0);
+  const startPos = useRef({ x: 0, y: 0 });
+  const lastPos = useRef({ x: 0, y: 0 });
   const lastUpdateTime = useRef(Date.now());
   const velocityRef = useRef(0);
   const frameRef = useRef(0);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     isDragging.current = true;
-    startMouseX.current = e.clientX;
-    lastMouseX.current = e.clientX;
+    startPos.current = { x: e.clientX, y: e.clientY };
+    lastPos.current = { x: e.clientX, y: e.clientY };
     lastUpdateTime.current = Date.now();
     cancelAnimationFrame(frameRef.current);
   };
@@ -175,14 +189,12 @@ export const CardSpinner: React.FC = () => {
       const currentTime = Date.now();
       const deltaTime = currentTime - lastUpdateTime.current;
 
-      // Only update velocity if enough time has passed
       if (deltaTime > 16) {
-        // Approximately 60fps
-        const delta = e.clientX - lastMouseX.current;
-        // Calculate velocity based on time difference for more consistent motion
-        velocityRef.current = (delta * 0.03) / (deltaTime / 16);
+        const deltaY = lastPos.current.y - e.clientY;
+        velocityRef.current = (deltaY * 0.003) / (deltaTime / 16);
         setVelocity(velocityRef.current);
-        lastMouseX.current = e.clientX;
+
+        lastPos.current = { x: e.clientX, y: e.clientY };
         lastUpdateTime.current = currentTime;
       }
     }
@@ -226,8 +238,8 @@ export const CardSpinner: React.FC = () => {
     >
       <Canvas camera={{ position: [0, 0, 6], fov: 75 }}>
         <ambientLight intensity={0.5} />
-        <pointLight position={[10, 10, 10]} intensity={1} />
         <RotatingCards
+          imageUrls={imageUrls}
           velocity={velocity}
           isDragging={isDragging.current}
           onSnapComplete={() => setIsSnapping(false)}
