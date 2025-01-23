@@ -32,19 +32,21 @@ export const AuthPage = () => {
       password,
       options: { data: { username } }, // Save the username in the user metadata
     });
-  
+
     if (authError) {
       setMessage(`Error: ${authError.message}`);
       setIsError(true);
       return;
     }
-  
+
     // Check if signup was successful
     if (authData) {
       setEmail('');
       setPassword('');
       setUsername('');
-      setMessage('Signup successful! Please check your email to confirm your account.');
+      setMessage(
+        'Signup successful! Please check your email to confirm your account.'
+      );
       setIsError(false);
 
       // Optionally update user-specific metadata in your profiles table
@@ -53,13 +55,12 @@ export const AuthPage = () => {
         username,
         updated_at: new Date().toISOString(),
       });
-  
+
       if (profileError) {
         console.error(`Error setting username: ${profileError.message}`);
       }
     }
   };
-  
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50">

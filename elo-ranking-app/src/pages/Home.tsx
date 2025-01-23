@@ -1,4 +1,6 @@
 import { CardSpinner } from '@/components/ui/CardSpinner';
+import { AnimatedTitle } from '../components/ui/AnimatedTitle';
+import '../index.css';
 
 const movies1 = [
   'src/static/images/godfather.jpg',
@@ -6,7 +8,6 @@ const movies1 = [
   'src/static/images/pulpfiction.jpg',
   'src/static/images/spiritedaway.jpg',
 ];
-
 const movies2 = [
   'src/static/images/fightclub.jpg',
   'src/static/images/paradiso.jpg',
@@ -18,9 +19,7 @@ export const HomePage = () => {
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <div className="container mx-auto px-4 py-16 text-center">
-        <h1 className="text-4xl font-bold mb-4 text-gray-900">
-          Welcome to ELO Ranking
-        </h1>
+        <AnimatedTitle />
         <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
           Create and share ranked lists of anything. From movies to sports
           teams, books to restaurants - rank what matters to you!
