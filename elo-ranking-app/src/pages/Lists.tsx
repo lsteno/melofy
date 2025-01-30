@@ -1,8 +1,10 @@
+import { MovieSearch } from '../components/ui/MovieSearch';
+
 export const ListsPage = () => {
   return (
-    <div>
-      <h1 className="text-2xl font-bold">My Lists</h1>
-      <p>Lists will appear here</p>
+    <div className="container mx-auto">
+      <h1 className="text-3xl font-bold text-center my-8">Movie Search</h1>
+      <MovieSearch />
     </div>
-  )
-}
+  );
+};
