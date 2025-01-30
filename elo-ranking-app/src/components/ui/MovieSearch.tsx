@@ -25,7 +25,7 @@ export function MovieSearch() {
 
       try {
         const data = await tmdbApi.searchMovies(query);
-        setMovies(data.results);
+        setMovies(data.results.slice(0, 5)); // Limit results to 5 movies
       } catch (err) {
         setError(err.message);
         setMovies([]);
