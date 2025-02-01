@@ -73,7 +73,15 @@ export const List = () => {
   };
 
   return (
-    <div className="container mx-auto max-w-2xl p-6">
+    <div className="container mx-auto p-6">
+      {/* MovieSearch with green success state */}
+      <div className="mb-12 max-w-2xl mx-auto">
+        <MovieSearch
+          onButtonClick={handleAddMovie}
+          successClassName="text-green-500" // Add this prop to your MovieSearch component
+        />
+      </div>
+
       {loading ? (
         <p className="text-center">Loading...</p>
       ) : error ? (
@@ -81,24 +89,29 @@ export const List = () => {
       ) : lists.length === 0 ? (
         <p className="text-gray-500 text-center">No elements found. Add one!</p>
       ) : (
-        <div className="space-y-4">
+        // Adjusted grid with smaller cards and more spacing
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 justify-center">
           {lists.map((list) => (
-            <Card key={list.id} className="hover:bg-gray-100 cursor-pointer">
-              <CardHeader>
-                <CardTitle>{list.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
+            <Card
+              key={list.id}
+              className="hover:shadow-lg transition-shadow max-w-[200px] mx-auto"
+            >
+              <CardContent className="p-2">
                 <img
                   src={getImageUrl(list.poster_path, 'w500')}
                   alt={list.title}
-                  className="w-36 h-48 object-cover rounded-md"
+                  className="w-full aspect-[2/3] object-cover rounded-md"
                 />
+                <CardHeader className="p-0 pt-2">
+                  <CardTitle className="text-base text-center truncate px-1">
+                    {list.title}
+                  </CardTitle>
+                </CardHeader>
               </CardContent>
             </Card>
           ))}
         </div>
       )}
-      <MovieSearch onButtonClick={handleAddMovie} />
     </div>
   );
 };

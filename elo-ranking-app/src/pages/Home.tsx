@@ -24,14 +24,7 @@ export const HomePage = () => {
           Create and share ranked lists of anything. From movies to sports
           teams, books to restaurants - rank what matters to you!
         </p>
-        <div className="flex justify-center space-x-4 mb-8">
-          <div className="h-64 w-1/2">
-            <CardSpinner imageUrls={movies1} />
-          </div>
-          <div className="h-64 w-1/2">
-            <CardSpinner imageUrls={movies2} />
-          </div>
-        </div>
+        <div className="flex justify-center space-x-4 mb-8"></div>
       </div>
     </main>
   );
