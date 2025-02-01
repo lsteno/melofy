@@ -5,6 +5,7 @@ import { HomePage } from './pages/Home';
 import { ListsPage } from './pages/Lists';
 import { AuthPage } from './pages/Auth';
 import { List } from './pages/List';
+import { Profile } from './pages/Profile';
 
 
 
@@ -28,6 +29,10 @@ export const router = createBrowserRouter([
       {
         path: '/list/:listId',
         element: <List />,
+      },
+      {
+        path: 'profile',
+        element: <Profile />,
       },
     ],
   },
