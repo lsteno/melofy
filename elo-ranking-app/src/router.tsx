@@ -1,9 +1,12 @@
 // src/router.tsx
-import { createBrowserRouter } from 'react-router-dom'
-import { MainLayout } from './components/layout/MainLayout'
-import { HomePage } from './pages/Home'
-import { ListsPage } from './pages/Lists'
-import { AuthPage } from './pages/Auth'
+import { createBrowserRouter } from 'react-router-dom';
+import { MainLayout } from './components/layout/MainLayout';
+import { HomePage } from './pages/Home';
+import { ListsPage } from './pages/Lists';
+import { AuthPage } from './pages/Auth';
+import { List } from './pages/List';
+
+
 
 export const router = createBrowserRouter([
   {
@@ -22,6 +25,10 @@ export const router = createBrowserRouter([
         path: '/auth',
         element: <AuthPage />,
       },
+      {
+        path: '/list/:listId',
+        element: <List />,
+      },
     ],
   },
-])
+]);

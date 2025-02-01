@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import { useSupabaseClient, useUser } from '@supabase/auth-helpers-react';
 import CreateListForm from '../components/ui/CreateListForm';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,7 @@ export const ListsPage = () => {
 
   const supabase = useSupabaseClient();
   const user = useUser();
+  const navigate = useNavigate(); // Initialize the navigate function
 
   useEffect(() => {
     if (user) {
@@ -42,37 +44,9 @@ export const ListsPage = () => {
     setLoading(false);
   };
 
-  const handleAddMovieToList = async (movie: any) => {
-    if (!selectedListId || !user) return;
-
-    const { error } = await supabase.from('list_items').insert([
-      {
-        list_id: selectedListId,
-        tmdb_id: movie.id,
-        title: movie.title,
-        poster_path: movie.posterPath,
-      },
-    ]);
-
-    if (error) {
-      throw new Error('Failed to add movie: ' + error.message);
-    }
-  };
-
   return (
     <div className="container mx-auto max-w-2xl p-6">
-      {selectedListId ? (
-        <>
-          <Button
-            onClick={() => setSelectedListId(null)}
-            className="mb-4"
-            variant="outline"
-          >
-            ← Back to Lists
-          </Button>
-          <MovieSearch onAddMovie={handleAddMovieToList} />
-        </>
-      ) : (
+      {
         <>
           <h2 className="text-2xl font-semibold text-center mb-6">
             Your Lists
@@ -106,7 +80,11 @@ export const ListsPage = () => {
           ) : (
             <div className="space-y-4">
               {lists.map((list) => (
-                <Card key={list.id}>
+                <Card
+                  key={list.id}
+                  className="hover:bg-gray-100 cursor-pointer"
+                  onClick={() => navigate(`/list/${list.id}`)}
+                >
                   <CardHeader>
                     <CardTitle>{list.title}</CardTitle>
                     <div className="flex gap-2 text-sm">
@@ -124,19 +102,13 @@ export const ListsPage = () => {
                     <p className="text-sm text-gray-600 mb-4">
                       {list.description || 'No description'}
                     </p>
-                    <Button
-                      onClick={() => setSelectedListId(list.id)}
-                      variant="secondary"
-                    >
-                      Manage Movies
-                    </Button>
                   </CardContent>
                 </Card>
               ))}
             </div>
           )}
         </>
-      )}
+      }
     </div>
   );
 };
