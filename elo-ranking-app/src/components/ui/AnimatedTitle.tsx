@@ -71,8 +71,8 @@ export const AnimatedTitle = () => {
             >
               {CYCLE_TERMS[currentIndex]}
             </motion.span>
-            <ChevronDown className="ml-2 text-gray-500" size={24} />
           </AnimatePresence>
+          <ChevronDown className="ml-2 text-gray-500" size={24} />
         </div>
 
         {/* Dropdown Menu */}

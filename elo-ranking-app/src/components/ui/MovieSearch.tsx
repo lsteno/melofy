@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 // Import the filled plus and check icons from the free-solid-svg-icons package
-import { faPlusSquare, faCheckSquare } from '@fortawesome/free-solid-svg-icons';
+import { faCirclePlus, faCircleCheck } from '@fortawesome/free-solid-svg-icons';
 
 type ChildComponentProps = {
   onButtonClick: (movie: any) => void;
@@ -132,8 +132,8 @@ export function MovieSearch({ onButtonClick }: ChildComponentProps) {
                     <FontAwesomeIcon
                       icon={
                         favoriteMovies.includes(movie.id)
-                          ? faCheckSquare
-                          : faPlusSquare
+                          ? faCircleCheck
+                          : faCirclePlus
                       }
                       size="2x"
                       className="cursor-pointer"

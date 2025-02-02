@@ -5,6 +5,8 @@ import { useSupabaseClient, useUser } from '@supabase/auth-helpers-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MovieSearch } from '@/components/ui/MovieSearch';
 import { getImageUrl } from '@/services/tmdb';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCircleXmark } from '@fortawesome/free-solid-svg-icons';
 
 export const List = () => {
   const supabase = useSupabaseClient();
@@ -107,8 +109,15 @@ export const List = () => {
           {lists.map((list) => (
             <Card
               key={list.id}
-              className="hover:shadow-lg transition-shadow max-w-[200px] mx-auto"
+              className="hover:shadow-lg transition-shadow max-w-[200px] mx-auto relative group"
             >
+              <div className="absolute -top-3 -right-3 opacity-0 group-hover:opacity-100 transition-opacity z-10  p-1">
+                <FontAwesomeIcon
+                  icon={faCircleXmark}
+                  size="2x"
+                  className="cursor-pointer text-red-500 hover:text-red-700 bg-white rounded-full"
+                />
+              </div>
               <CardContent className="p-2">
                 <img
                   src={getImageUrl(list.poster_path, 'w500')}
