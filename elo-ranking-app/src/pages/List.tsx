@@ -52,21 +52,34 @@ export const List = () => {
       return;
     }
 
-    const { error } = await supabase.from('list_items').insert([
-      {
-        list_id: listId,
-        tmdb_id: selectedMovie.id,
-        title: selectedMovie.title,
-        poster_path: selectedMovie.posterPath,
-        elo_rating: 1000,
-        position: 0,
-      },
-    ]);
+    // Insert the movie into your "list_items" table and ask Supabase to return the inserted record.
+    const { data, error } = await supabase
+      .from('list_items')
+      .insert(
+        [
+          {
+            list_id: listId,
+            tmdb_id: selectedMovie.id,
+            title: selectedMovie.title,
+            poster_path: selectedMovie.posterPath,
+            elo_rating: 1000,
+            position: 0,
+          },
+        ],
+        { returning: 'representation' } // Ensure that the new record is returned.
+      )
+      .select();
+
+    console.log('Insert data:', data);
 
     if (error) {
       setError(error.message);
     } else {
       setSuccess('Item added successfully!');
+      // If the insert returns data, update the lists state immediately.
+      if (data && data.length > 0) {
+        setLists((prevLists) => [data[0], ...prevLists]);
+      }
     }
 
     setLoading(false);
