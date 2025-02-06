@@ -3,10 +3,13 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useSupabaseClient, useUser } from '@supabase/auth-helpers-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { MovieSearch } from '@/components/ui/MovieSearch';
 import { getImageUrl } from '@/services/tmdb';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCircleXmark } from '@fortawesome/free-solid-svg-icons';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { Link } from 'react-router-dom';
 
 export const List = () => {
   const supabase = useSupabaseClient();
@@ -16,6 +19,7 @@ export const List = () => {
   const [error, setError] = useState<string | null>(null);
   const [lists, setLists] = useState<any[]>([]);
   const [success, setSuccess] = useState(null);
+  const navigate = useNavigate(); // Initialize the navigate function
 
   useEffect(() => {
     if (user) {
@@ -97,9 +101,7 @@ export const List = () => {
     const { error } = await supabase
       .from('list_items')
       .delete()
-      .eq('id', selectedMovie.id)
-
-
+      .eq('id', selectedMovie.id);
 
     if (error) {
       setError(error.message);
@@ -113,6 +115,11 @@ export const List = () => {
   return (
     <div className="container mx-auto p-6">
       {/* MovieSearch with green success state */}
+      <div className="mb-12 max-w-2xl mx-auto">
+        <Button onClick={() => navigate(`/list/${listId}/battle`)}>
+          Battle!
+        </Button>
+      </div>
       <div className="mb-12 max-w-2xl mx-auto">
         <MovieSearch
           onButtonClick={handleAddMovie}

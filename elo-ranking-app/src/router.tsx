@@ -6,8 +6,7 @@ import { ListsPage } from './pages/Lists';
 import { AuthPage } from './pages/Auth';
 import { List } from './pages/List';
 import { Profile } from './pages/Profile';
-
-
+import { Battle } from './pages/Battle';
 
 export const router = createBrowserRouter([
   {
@@ -29,6 +28,10 @@ export const router = createBrowserRouter([
       {
         path: '/list/:listId',
         element: <List />,
+      },
+      {
+        path: '/list/:listId/battle',
+        element: <Battle />,
       },
       {
         path: 'profile',
