@@ -78,10 +78,33 @@ export const List = () => {
       setError(error.message);
     } else {
       setSuccess('Item added successfully!');
-      // If the insert returns data, update the lists state immediately.
-      if (data && data.length > 0) {
-        setLists((prevLists) => [data[0], ...prevLists]);
-      }
+    }
+
+    setLoading(false);
+  };
+  const handleDeleteMovie = async (selectedMovie: any) => {
+    console.log(selectedMovie.id);
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    if (!user) {
+      setError('You must be logged in to delete movies from a list.');
+      setLoading(false);
+      return;
+    }
+
+    const { error } = await supabase
+      .from('list_items')
+      .delete()
+      .eq('id', selectedMovie.id)
+
+
+
+    if (error) {
+      setError(error.message);
+    } else {
+      setSuccess('Item removed successfully!');
     }
 
     setLoading(false);
@@ -93,7 +116,7 @@ export const List = () => {
       <div className="mb-12 max-w-2xl mx-auto">
         <MovieSearch
           onButtonClick={handleAddMovie}
-          successClassName="text-green-500" // Add this prop to your MovieSearch component
+          successClassName="text-green-500"
         />
       </div>
 
@@ -111,7 +134,10 @@ export const List = () => {
               key={list.id}
               className="hover:shadow-lg transition-shadow max-w-[200px] mx-auto relative group"
             >
-              <div className="absolute -top-3 -right-3 opacity-0 group-hover:opacity-100 transition-opacity z-10  p-1">
+              <div
+                className="absolute -top-3 -right-3 opacity-0 group-hover:opacity-100 transition-opacity z-10  p-1"
+                onClick={() => handleDeleteMovie(list)}
+              >
                 <FontAwesomeIcon
                   icon={faCircleXmark}
                   size="2x"
