@@ -102,7 +102,6 @@ const MovieBattle: React.FC<MovieBattleProps> = ({ list }) => {
     const stepTime = duration / steps;
     const valueChange = endValue - startValue;
 
-    // Exaggerate the animation for winners
     const targetValue = isWinner ? endValue + 20 : endValue;
     let currentStep = 0;
 
