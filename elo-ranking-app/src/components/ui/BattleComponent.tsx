@@ -26,22 +26,110 @@ interface WinStreak {
 }
 
 const MovieBattle: React.FC<MovieBattleProps> = ({ list }) => {
-  // State for all available movies
+  // Main state for movie management
   const [allMovies, setAllMovies] = useState<MovieItem[]>([]);
-  // Current battle pair
   const [currentPair, setCurrentPair] = useState<MovieItem[]>([]);
-  // Next pair (preloaded)
   const [nextPair, setNextPair] = useState<MovieItem[]>([]);
+
+  // UI state management
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [battleCount, setBattleCount] = useState(0);
   const [winStreak, setWinStreak] = useState<WinStreak>({});
-  const [error, setError] = useState<string | null>(null);
-
-  // Animation states
   const [winner, setWinner] = useState<number | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [progressValues, setProgressValues] = useState<{
+    [key: number]: number;
+  }>({});
 
-  // Fetch all movies once at the start
+  const selectMoviePair = (
+    movies: MovieItem[],
+    previousPair: MovieItem[]
+  ): MovieItem[] => {
+    const RANGE_SIZE = 100; // Group movies within 100 rating points
+    const ratingGroups: { [key: number]: MovieItem[] } = {};
+
+    // Group movies by rating ranges for fairer matches
+    movies.forEach((movie) => {
+      const ratingGroup = Math.floor(movie.elo_rating / RANGE_SIZE);
+      if (!ratingGroups[ratingGroup]) ratingGroups[ratingGroup] = [];
+      ratingGroups[ratingGroup].push(movie);
+    });
+
+    const validGroups = Object.values(ratingGroups).filter(
+      (group) => group.length >= 2
+    );
+
+    if (validGroups.length === 0) {
+      // Fallback to random selection if no valid groups
+      const shuffled = [...movies].sort(() => Math.random() - 0.5);
+      return shuffled.slice(0, 2);
+    }
+
+    const selectedGroup =
+      validGroups[Math.floor(Math.random() * validGroups.length)];
+    let attempts = 0;
+    const MAX_ATTEMPTS = 10;
+    let selectedPair: MovieItem[];
+
+    // Try to find a pair that wasn't in the previous battle
+    do {
+      const shuffled = [...selectedGroup].sort(() => Math.random() - 0.5);
+      selectedPair = shuffled.slice(0, 2);
+      attempts++;
+
+      if (attempts >= MAX_ATTEMPTS) break;
+    } while (
+      previousPair.length > 0 &&
+      selectedPair.some((movie) =>
+        previousPair.some((prevMovie) => prevMovie.id === movie.id)
+      )
+    );
+
+    return selectedPair;
+  };
+
+  const animateProgress = (
+    movieId: number,
+    startValue: number,
+    endValue: number,
+    isWinner: boolean
+  ) => {
+    setProgressValues((prev) => ({ ...prev, [movieId]: startValue }));
+
+    const duration = 1000; // Animation duration in milliseconds
+    const steps = 60; // 60fps animation
+    const stepTime = duration / steps;
+    const valueChange = endValue - startValue;
+
+    // Exaggerate the animation for winners
+    const targetValue = isWinner ? endValue + 20 : endValue;
+    let currentStep = 0;
+
+    const interval = setInterval(() => {
+      currentStep++;
+      const progress = currentStep / steps;
+      // Cubic easing for smooth animation
+      const easeProgress = 1 - Math.pow(1 - progress, 3);
+
+      setProgressValues((prev) => ({
+        ...prev,
+        [movieId]: startValue + valueChange * easeProgress,
+      }));
+
+      if (currentStep >= steps) {
+        clearInterval(interval);
+        // Reset to actual value after animation
+        setTimeout(() => {
+          setProgressValues((prev) => ({
+            ...prev,
+            [movieId]: endValue,
+          }));
+        }, 500);
+      }
+    }, stepTime);
+  };
+
   const fetchAllMovies = async () => {
     try {
       setIsLoading(true);
@@ -72,50 +160,6 @@ const MovieBattle: React.FC<MovieBattleProps> = ({ list }) => {
     }
   };
 
-  const selectMoviePair = (
-    movies: MovieItem[],
-    previousPair: MovieItem[]
-  ): MovieItem[] => {
-    const RANGE_SIZE = 100;
-    const ratingGroups: { [key: number]: MovieItem[] } = {};
-
-    movies.forEach((movie) => {
-      const ratingGroup = Math.floor(movie.elo_rating / RANGE_SIZE);
-      if (!ratingGroups[ratingGroup]) ratingGroups[ratingGroup] = [];
-      ratingGroups[ratingGroup].push(movie);
-    });
-
-    const validGroups = Object.values(ratingGroups).filter(
-      (group) => group.length >= 2
-    );
-
-    if (validGroups.length === 0) {
-      const shuffled = [...movies].sort(() => Math.random() - 0.5);
-      return shuffled.slice(0, 2);
-    }
-
-    const selectedGroup =
-      validGroups[Math.floor(Math.random() * validGroups.length)];
-    let attempts = 0;
-    const MAX_ATTEMPTS = 10;
-    let selectedPair: MovieItem[];
-
-    do {
-      const shuffled = [...selectedGroup].sort(() => Math.random() - 0.5);
-      selectedPair = shuffled.slice(0, 2);
-      attempts++;
-
-      if (attempts >= MAX_ATTEMPTS) break;
-    } while (
-      previousPair.length > 0 &&
-      selectedPair.some((movie) =>
-        previousPair.some((prevMovie) => prevMovie.id === movie.id)
-      )
-    );
-
-    return selectedPair;
-  };
-
   const handleBattle = async (winnerId: number) => {
     if (isTransitioning) return;
     setIsTransitioning(true);
@@ -124,7 +168,7 @@ const MovieBattle: React.FC<MovieBattleProps> = ({ list }) => {
     const winner = currentPair.find((m) => m.id === winnerId)!;
     const loser = currentPair.find((m) => m.id !== winnerId)!;
 
-    // Update local state first for immediate feedback
+    // Update win streak and calculate new ratings
     const winnerStreak = (winStreak[winnerId] || 0) + 1;
     setWinStreak((prev) => ({
       ...prev,
@@ -132,12 +176,25 @@ const MovieBattle: React.FC<MovieBattleProps> = ({ list }) => {
       [loser.id]: 0,
     }));
 
-    // Calculate new ratings
     const kFactor = 32 * (1 + winnerStreak * 0.1);
     const [newWinnerRating, newLoserRating] = calculateElo(
       winner.elo_rating,
       loser.elo_rating,
       kFactor
+    );
+
+    // Start progress animations
+    animateProgress(
+      winner.id,
+      winner.elo_rating / 20,
+      newWinnerRating / 20,
+      true
+    );
+    animateProgress(
+      loser.id,
+      loser.elo_rating / 20,
+      newLoserRating / 20,
+      false
     );
 
     // Update local movie ratings
@@ -154,9 +211,8 @@ const MovieBattle: React.FC<MovieBattleProps> = ({ list }) => {
     // Prepare next pair while animation is playing
     const newNextPair = selectMoviePair(allMovies, nextPair);
 
-    // Wait for animation
+    // Wait for animation to complete
     setTimeout(async () => {
-      // Move to next pair
       setCurrentPair(nextPair);
       setNextPair(newNextPair);
       setWinner(null);
@@ -177,9 +233,8 @@ const MovieBattle: React.FC<MovieBattleProps> = ({ list }) => {
         ]);
       } catch (err) {
         console.error('Failed to update database:', err);
-        // Could add a toast notification here
       }
-    }, 1000); // Match this with animation duration
+    }, 1000);
   };
 
   useEffect(() => {
@@ -218,14 +273,8 @@ const MovieBattle: React.FC<MovieBattleProps> = ({ list }) => {
               key={movie.id}
               initial={{ opacity: 1, scale: 1 }}
               animate={{
-                opacity: winner === null ? 1 : winner === movie.id ? 1 : 0.5,
-                scale: winner === null ? 1 : winner === movie.id ? 1.05 : 0.95,
-                filter:
-                  winner === null
-                    ? 'brightness(1)'
-                    : winner === movie.id
-                      ? 'brightness(1.2)'
-                      : 'brightness(0.8)',
+                opacity: winner === null ? 1 : winner === movie.id ? 1 : 0.7,
+                scale: winner === null ? 1 : winner === movie.id ? 1.02 : 0.98,
               }}
               exit={{ opacity: 0, scale: 0.9 }}
               transition={{ duration: 0.5 }}
@@ -244,15 +293,6 @@ const MovieBattle: React.FC<MovieBattleProps> = ({ list }) => {
                     alt={movie.title}
                     className="object-cover w-full h-full"
                   />
-                  {winner === movie.id && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 2 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="absolute inset-0 flex items-center justify-center bg-black/30"
-                    >
-                      <span className="text-4xl">🏆</span>
-                    </motion.div>
-                  )}
                 </div>
                 <CardContent className="p-4">
                   <h3 className="text-xl font-semibold mb-2">{movie.title}</h3>
@@ -265,7 +305,16 @@ const MovieBattle: React.FC<MovieBattleProps> = ({ list }) => {
                         {Math.round(movie.elo_rating)}
                       </span>
                     </div>
-                    <Progress value={movie.elo_rating / 20} />
+                    <Progress
+                      value={progressValues[movie.id] ?? movie.elo_rating / 20}
+                      className={`transition-all duration-300 ${
+                        winner === movie.id
+                          ? 'bg-muted [&>div]:bg-green-500'
+                          : winner !== null
+                            ? 'opacity-50'
+                            : ''
+                      }`}
+                    />
                     {winStreak[movie.id] > 0 && (
                       <div className="text-sm text-green-600 mt-2">
                         🔥 {winStreak[movie.id]} win streak!
