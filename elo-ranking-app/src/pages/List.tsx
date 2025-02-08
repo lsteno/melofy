@@ -8,6 +8,7 @@ import { getImageUrl } from '@/services/tmdb';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCircleXmark } from '@fortawesome/free-solid-svg-icons';
 
+
 interface ListItem {
   id: number; // Adjust type if your ID is a string
   tmdb_id: number;
