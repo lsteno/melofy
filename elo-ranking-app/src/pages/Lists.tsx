@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MovieSearch } from '@/components/ui/MovieSearch';
 import ImportLetterboxdMovies from '@/components/ui/LetterboxdImport';
-
 import '../static/style/list.css';
 
 export const ListsPage = () => {
@@ -50,10 +49,10 @@ export const ListsPage = () => {
     <div className="container mx-auto max-w-2xl p-6">
       {
         <>
-          <h2 className="text-2xl font-semibold text-center mb-6">
+            <h2 className="text-2xl font-semibold text-center mb-6">
             Your Lists
-          </h2>
-          <ImportLetterboxdMovies />
+            </h2>
+            {/* <ImportLetterboxdMovies /> */}
           <Button
             onClick={() => setShowForm(!showForm)}
             variant="default"
