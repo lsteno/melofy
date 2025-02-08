@@ -8,10 +8,10 @@ export const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex h-16 justify-between items-center">
           <Link to="/" className="text-xl font-bold">
-            ELO Ranking
+            melofy
           </Link>
           <div className="flex gap-4">
-            <Link to="/lists" className="hover:text-gray-600">
+            <Link to="/list" className="hover:text-gray-600">
               My Lists
             </Link>
             {user ? (

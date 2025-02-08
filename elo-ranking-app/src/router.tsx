@@ -18,7 +18,7 @@ export const router = createBrowserRouter([
         element: <HomePage />,
       },
       {
-        path: '/lists',
+        path: '/list',
         element: <ListsPage />,
       },
       {
