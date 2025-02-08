@@ -270,15 +270,15 @@ const MovieBattle: React.FC<MovieBattleProps> = ({ list }) => {
           {currentPair.map((movie) => (
             <motion.div
               key={movie.id}
-              initial={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 1 }}
               animate={{
                 opacity: winner === null ? 1 : winner === movie.id ? 1 : 0.7,
-                scale: winner === null ? 1 : winner === movie.id ? 1.02 : 0.98,
               }}
-              exit={{ opacity: 0, scale: 0.9 }}
+              exit={{ opacity: 0 }}
               transition={{ duration: 0.5 }}
               whileHover={{ scale: isTransitioning ? 1 : 1.02 }}
               whileTap={{ scale: isTransitioning ? 1 : 0.98 }}
+              className="w-full max-w-md mx-auto" // Added max-width and centering
             >
               <Card
                 className={`overflow-hidden cursor-pointer transition-shadow hover:shadow-lg ${
@@ -292,9 +292,35 @@ const MovieBattle: React.FC<MovieBattleProps> = ({ list }) => {
                     alt={movie.title}
                     className="object-cover w-full h-full"
                   />
+                  <AnimatePresence>
+                    {winner === movie.id && winStreak[movie.id] > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.5, ease: 'easeOut' }}
+                        className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+                      >
+                        <div className="text-center text-white">
+                          <div className="text-4xl font-bold mb-2">🔥</div>
+                          <div className="text-2xl font-bold">
+                            {winStreak[movie.id]} Win
+                            {winStreak[movie.id] > 1 ? 's' : ''}!
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
-                <CardContent className="p-4">
-                  <h3 className="text-xl font-semibold mb-2">{movie.title}</h3>
+                <CardContent className="p-6">
+                  {' '}
+                  {/* Increased padding */}
+                  <h3
+                    className="text-xl font-semibold mb-4 leading-tight min-h-[3.5rem] line-clamp-2"
+                    title={movie.title} // Show full title on hover
+                  >
+                    {movie.title}
+                  </h3>
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-muted-foreground">
@@ -314,11 +340,6 @@ const MovieBattle: React.FC<MovieBattleProps> = ({ list }) => {
                             : ''
                       }`}
                     />
-                    {winStreak[movie.id] > 0 && (
-                      <div className="text-sm text-green-600 mt-2">
-                        🔥 {winStreak[movie.id]} win streak!
-                      </div>
-                    )}
                   </div>
                 </CardContent>
               </Card>
