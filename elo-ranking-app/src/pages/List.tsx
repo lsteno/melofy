@@ -8,7 +8,6 @@ import { getImageUrl } from '@/services/tmdb';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCircleXmark } from '@fortawesome/free-solid-svg-icons';
 
-
 interface ListItem {
   id: number; // Adjust type if your ID is a string
   tmdb_id: number;
@@ -116,6 +115,7 @@ export const List: React.FC = () => {
       setError(error.message);
     } else {
       setSuccess('Item removed successfully!');
+      fetchLists();
     }
 
     setLoading(false);
@@ -130,9 +130,7 @@ export const List: React.FC = () => {
         </Button>
       </div>
       <div className="mb-12 max-w-2xl mx-auto">
-        <MovieSearch
-          onButtonClick={handleAddMovie}
-        />
+        <MovieSearch onButtonClick={handleAddMovie} />
       </div>
 
       {loading ? (
