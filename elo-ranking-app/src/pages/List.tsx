@@ -7,6 +7,11 @@ import { MovieSearch } from '@/components/ui/MovieSearch';
 import { getImageUrl } from '@/services/tmdb';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCircleXmark } from '@fortawesome/free-solid-svg-icons';
+import { motion, AnimatePresence } from 'framer-motion';
+
+//
+// TYPES
+//
 
 interface ListItem {
   id: number; // Adjust type if your ID is a string
@@ -20,6 +25,133 @@ interface Movie {
   title: string;
   posterPath: string;
 }
+
+interface MovieDetails {
+  overview: string;
+  release_date: string;
+  vote_average: number;
+  // add other details if needed
+}
+
+//
+// API CALL: Fetch movie details from TMDB
+//
+
+async function fetchMovieDetails(tmdbId: number): Promise<MovieDetails> {
+  const apiKey = import.meta.env.VITE_TMDB_API_KEY; // Replace with your TMDB API key or use an environment variable
+  const response = await fetch(
+    `https://api.themoviedb.org/3/movie/${tmdbId}?api_key=${apiKey}`
+  );
+  if (!response.ok) {
+    throw new Error('Failed to fetch movie details');
+  }
+  const data = await response.json();
+  return data;
+}
+
+//
+// MOVIE CARD COMPONENT
+//
+
+interface MovieCardProps {
+  movie: ListItem;
+  onDelete: (movie: ListItem) => void;
+}
+
+const MovieCard: React.FC<MovieCardProps> = ({ movie, onDelete }) => {
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  const [details, setDetails] = useState<MovieDetails | null>(null);
+  const [loadingDetails, setLoadingDetails] = useState<boolean>(false);
+  const [detailsError, setDetailsError] = useState<string | null>(null);
+
+  // When the card is expanded, fetch additional details if not already loaded.
+  useEffect(() => {
+    if (isExpanded && !details) {
+      setLoadingDetails(true);
+      setDetailsError(null);
+      fetchMovieDetails(movie.tmdb_id)
+        .then((data) => setDetails(data))
+        .catch((error) => setDetailsError(error.message))
+        .finally(() => setLoadingDetails(false));
+    }
+  }, [isExpanded, details, movie.tmdb_id]);
+
+  // Toggle expansion state when the card is clicked.
+  const toggleExpand = () => {
+    setIsExpanded((prev) => !prev);
+  };
+
+  // Prevent the card's click handler from firing when the delete icon is clicked.
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onDelete(movie);
+  };
+
+  return (
+    // Framer Motion's layout prop will animate size/position changes smoothly.
+    <motion.div layout onClick={toggleExpand} className="cursor-pointer">
+      <Card className="hover:shadow-lg transition-shadow max-w-[200px] mx-auto relative group">
+        <div
+          className="absolute -top-3 -right-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 p-1"
+          onClick={handleDeleteClick}
+        >
+          <FontAwesomeIcon
+            icon={faCircleXmark}
+            size="2x"
+            className="cursor-pointer text-red-500 hover:text-red-700 bg-white rounded-full"
+          />
+        </div>
+        <CardContent className="p-2">
+          <img
+            src={getImageUrl(movie.poster_path, 'w500')}
+            alt={movie.title}
+            className="w-full aspect-[2/3] object-cover rounded-md"
+          />
+          <CardHeader className="p-0 pt-2">
+            <CardTitle className="text-base text-center truncate px-1">
+              {movie.title}
+            </CardTitle>
+          </CardHeader>
+        </CardContent>
+      </Card>
+      {/* AnimatePresence handles mounting/unmounting of the details section */}
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            key="expanded-content"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+            className="max-w-[200px] mx-auto bg-gray-100 rounded-b-md p-2"
+          >
+            {loadingDetails ? (
+              <p className="text-sm text-center">Loading details...</p>
+            ) : detailsError ? (
+              <p className="text-sm text-red-500 text-center">
+                Error: {detailsError}
+              </p>
+            ) : details ? (
+              <div className="text-sm">
+                <p className="mb-2">{details.overview}</p>
+                <p>
+                  <strong>Release Date:</strong> {details.release_date}
+                </p>
+                <p>
+                  <strong>Rating:</strong> {details.vote_average}
+                </p>
+              </div>
+            ) : null}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+};
+
+//
+// MAIN LIST COMPONENT
+//
 
 export const List: React.FC = () => {
   const supabase = useSupabaseClient();
@@ -95,7 +227,6 @@ export const List: React.FC = () => {
   };
 
   const handleDeleteMovie = async (selectedMovie: ListItem) => {
-    console.log(selectedMovie.id);
     setLoading(true);
     setError(null);
     setSuccess(null);
@@ -143,33 +274,11 @@ export const List: React.FC = () => {
         // Grid of movie cards
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 justify-center">
           {lists.map((list) => (
-            <Card
+            <MovieCard
               key={list.id}
-              className="hover:shadow-lg transition-shadow max-w-[200px] mx-auto relative group"
-            >
-              <div
-                className="absolute -top-3 -right-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 p-1"
-                onClick={() => handleDeleteMovie(list)}
-              >
-                <FontAwesomeIcon
-                  icon={faCircleXmark}
-                  size="2x"
-                  className="cursor-pointer text-red-500 hover:text-red-700 bg-white rounded-full"
-                />
-              </div>
-              <CardContent className="p-2">
-                <img
-                  src={getImageUrl(list.poster_path, 'w500')}
-                  alt={list.title}
-                  className="w-full aspect-[2/3] object-cover rounded-md"
-                />
-                <CardHeader className="p-0 pt-2">
-                  <CardTitle className="text-base text-center truncate px-1">
-                    {list.title}
-                  </CardTitle>
-                </CardHeader>
-              </CardContent>
-            </Card>
+              movie={list}
+              onDelete={handleDeleteMovie}
+            />
           ))}
         </div>
       )}
