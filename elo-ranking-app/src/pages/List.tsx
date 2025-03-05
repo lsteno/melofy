@@ -1,3 +1,6 @@
+//
+// IMPORTS
+//
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSupabaseClient, useUser } from '@supabase/auth-helpers-react';
@@ -64,7 +67,6 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onDelete }) => {
   const [loadingDetails, setLoadingDetails] = useState<boolean>(false);
   const [detailsError, setDetailsError] = useState<string | null>(null);
 
-  // When the card is expanded, fetch additional details if not already loaded.
   useEffect(() => {
     if (isExpanded && !details) {
       setLoadingDetails(true);
@@ -76,23 +78,20 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onDelete }) => {
     }
   }, [isExpanded, details, movie.tmdb_id]);
 
-  // Toggle expansion state when the card is clicked.
   const toggleExpand = () => {
     setIsExpanded((prev) => !prev);
   };
 
-  // Prevent the card's click handler from firing when the delete icon is clicked.
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onDelete(movie);
   };
 
   return (
-    // Framer Motion's layout prop will animate size/position changes smoothly.
-    <motion.div layout onClick={toggleExpand} className="cursor-pointer">
+    <motion.div layout className="cursor-pointer">
       <Card className="hover:shadow-lg transition-shadow max-w-[200px] mx-auto relative group">
         <div
-          className="absolute -top-3 -right-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 p-1"
+          className="absolute -top-3 -right-3 opacity-0 group-hover:opacity-100 transition-opacity z-20 p-1"
           onClick={handleDeleteClick}
         >
           <FontAwesomeIcon
@@ -101,12 +100,41 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onDelete }) => {
             className="cursor-pointer text-red-500 hover:text-red-700 bg-white rounded-full"
           />
         </div>
-        <CardContent className="p-2">
+        <CardContent className="p-2 relative" onClick={toggleExpand}>
           <img
             src={getImageUrl(movie.poster_path, 'w500')}
             alt={movie.title}
             className="w-full aspect-[2/3] object-cover rounded-md"
           />
+          <AnimatePresence>
+            {isExpanded && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-2 bg-black/80 text-white rounded-md p-3 overflow-y-auto"
+                style={{ maxHeight: "calc(100% - 16px)" }}
+              >
+                {loadingDetails ? (
+                  <p className="text-sm text-center">Loading details...</p>
+                ) : detailsError ? (
+                  <p className="text-sm text-red-500 text-center">
+                    Error: {detailsError}
+                  </p>
+                ) : details ? (
+                  <div className="text-sm">
+                    <p className="mb-2">{details.overview}</p>
+                    <p className="mt-2">
+                      <strong>Release:</strong> {details.release_date}
+                    </p>
+                    <p>
+                      <strong>Rating:</strong> {details.vote_average}
+                    </p>
+                  </div>
+                ) : null}
+              </motion.div>
+            )}
+          </AnimatePresence>
           <CardHeader className="p-0 pt-2">
             <CardTitle className="text-base text-center truncate px-1">
               {movie.title}
@@ -114,37 +142,6 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onDelete }) => {
           </CardHeader>
         </CardContent>
       </Card>
-      {/* AnimatePresence handles mounting/unmounting of the details section */}
-      <AnimatePresence>
-        {isExpanded && (
-          <motion.div
-            key="expanded-content"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-            className="max-w-[200px] mx-auto bg-gray-100 rounded-b-md p-2"
-          >
-            {loadingDetails ? (
-              <p className="text-sm text-center">Loading details...</p>
-            ) : detailsError ? (
-              <p className="text-sm text-red-500 text-center">
-                Error: {detailsError}
-              </p>
-            ) : details ? (
-              <div className="text-sm">
-                <p className="mb-2">{details.overview}</p>
-                <p>
-                  <strong>Release Date:</strong> {details.release_date}
-                </p>
-                <p>
-                  <strong>Rating:</strong> {details.vote_average}
-                </p>
-              </div>
-            ) : null}
-          </motion.div>
-        )}
-      </AnimatePresence>
     </motion.div>
   );
 };
