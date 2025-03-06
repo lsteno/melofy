@@ -51,10 +51,11 @@ export const Profile = () => {
   ) => {
     if (!event.target.files || event.target.files.length === 0) return;
     const file = event.target.files[0];
-    const user = await supabase.auth.getUser();
-    if (!user.data?.user) return;
+    const userResponse = await supabase.auth.getUser();
+    if (!userResponse.data?.user) return;
 
-    const filePath = `avatars/${user.data.user.id}/${file.name}`;
+    // Use a relative file path: do NOT include the bucket name.
+    const filePath = `${userResponse.data.user.id}/${file.name}`;
     const { error } = await supabase.storage
       .from('avatars')
       .upload(filePath, file, { upsert: true });
@@ -67,11 +68,11 @@ export const Profile = () => {
       .from('avatars')
       .getPublicUrl(filePath);
 
-    // Update the profile with new avatar URL
+    // Update the profile with the new avatar URL
     const { error: updateError } = await supabase
       .from('profiles')
       .update({ avatar_url: publicUrlData.publicUrl })
-      .eq('id', user.data.user.id);
+      .eq('id', userResponse.data.user.id);
 
     if (updateError) {
       console.error('Error updating profile with avatar:', updateError);
@@ -94,7 +95,7 @@ export const Profile = () => {
             <CardTitle className="text-2xl font-bold">Profile</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col items-center gap-6 relative">
-            {/* Avatar with Pencil Button Overlay */}
+            {/* Avatar with pencil overlay */}
             <div className="relative">
               {loading ? (
                 <Skeleton className="w-24 h-24 rounded-full" />
@@ -113,7 +114,7 @@ export const Profile = () => {
                 <FiEdit className="w-4 h-4 text-gray-600" />
               </button>
             </div>
-            {/* Hidden File Input */}
+            {/* Hidden file input triggered by the pencil button */}
             <input
               type="file"
               accept="image/*"
