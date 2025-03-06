@@ -7,6 +7,7 @@ import { AuthPage } from './pages/Auth';
 import { List } from './pages/List';
 import { Profile } from './pages/Profile';
 import { Battle } from './pages/Battle';
+import { NotFound } from './pages/NotFound';
 
 export const router = createBrowserRouter([
   {
@@ -36,6 +37,10 @@ export const router = createBrowserRouter([
       {
         path: 'profile',
         element: <Profile />,
+      },
+      {
+        path: '*',
+        element: <NotFound />,
       },
     ],
   },
