@@ -11,7 +11,6 @@ export const ListsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [selectedListId, setSelectedListId] = useState<string | null>(null);
 
   const supabase = useSupabaseClient();
   const user = useUser();
@@ -47,10 +46,9 @@ export const ListsPage = () => {
     <div className="container mx-auto max-w-2xl p-6">
       {
         <>
-            <h2 className="text-2xl font-semibold text-center mb-6">
+          <h2 className="text-2xl font-semibold text-center mb-6">
             Your Lists
-            </h2>
-            {/* <ImportLetterboxdMovies /> */}
+          </h2>
           <Button
             onClick={() => setShowForm(!showForm)}
             variant="default"
@@ -87,9 +85,10 @@ export const ListsPage = () => {
                   <CardHeader>
                     <CardTitle>{list.title}</CardTitle>
                     <div className="flex gap-2 text-sm">
-                        <span className="bg-gray-100 px-2 py-1 rounded">
-                        {list.category.charAt(0).toUpperCase() + list.category.slice(1).toLowerCase()}
-                        </span>
+                      <span className="bg-gray-100 px-2 py-1 rounded">
+                        {list.category.charAt(0).toUpperCase() +
+                          list.category.slice(1).toLowerCase()}
+                      </span>
                       {list.is_public && (
                         <span className="bg-blue-100 px-2 py-1 rounded">
                           Public
