@@ -4,8 +4,6 @@ import { useSupabaseClient, useUser } from '@supabase/auth-helpers-react';
 import CreateListForm from '../components/ui/CreateListForm';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { MovieSearch } from '@/components/ui/MovieSearch';
-import ImportLetterboxdMovies from '@/components/ui/LetterboxdImport';
 import '../static/style/list.css';
 
 export const ListsPage = () => {
@@ -89,9 +87,9 @@ export const ListsPage = () => {
                   <CardHeader>
                     <CardTitle>{list.title}</CardTitle>
                     <div className="flex gap-2 text-sm">
-                      <span className="bg-gray-100 px-2 py-1 rounded">
-                        {list.category}
-                      </span>
+                        <span className="bg-gray-100 px-2 py-1 rounded">
+                        {list.category.charAt(0).toUpperCase() + list.category.slice(1).toLowerCase()}
+                        </span>
                       {list.is_public && (
                         <span className="bg-blue-100 px-2 py-1 rounded">
                           Public
